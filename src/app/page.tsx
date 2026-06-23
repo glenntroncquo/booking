@@ -1,5 +1,16 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { isValidCompanyId } from "@/lib/constants";
 
-export default function HomePage() {
+type PageProps = {
+  searchParams: Promise<{ companyId?: string }>;
+};
+
+export default async function HomePage({ searchParams }: PageProps) {
+  const { companyId } = await searchParams;
+
+  if (companyId && isValidCompanyId(companyId)) {
+    redirect(`/${companyId}`);
+  }
+
   notFound();
 }
