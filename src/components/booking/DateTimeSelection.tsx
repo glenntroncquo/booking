@@ -121,9 +121,9 @@ export function DateTimeSelection({
                   disabled={isDateDisabled}
                   month={calendarMonth}
                   onMonthChange={onCalendarMonthChange}
-                  fromDate={new Date()}
-                  toDate={maxDate}
-                  initialFocus
+                  startMonth={new Date()}
+                  endMonth={maxDate}
+                  autoFocus
                   modifiers={{
                     available: (date) => dateHasAvailability(date),
                   }}
