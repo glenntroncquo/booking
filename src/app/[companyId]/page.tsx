@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BookingShell } from "@/components/booking/BookingShell";
+import { SalonBooking } from "@/components/booking/SalonBooking";
 import { isValidCompanyId } from "@/lib/constants";
 import { getCompanyById } from "@/lib/supabase/company";
 
 type PageProps = {
   params: Promise<{ companyId: string }>;
+  searchParams: Promise<{ staff?: string | string[] }>;
 };
+
+function parseStaffIds(staff?: string | string[]): string[] {
+  if (!staff) return [];
+  const raw = Array.isArray(staff) ? staff : [staff];
+  return raw
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
 
 export async function generateMetadata({
   params,
@@ -28,8 +38,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function CompanyBookingPage({ params }: PageProps) {
+export default async function CompanyBookingPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { companyId } = await params;
+  const { staff } = await searchParams;
 
   if (!isValidCompanyId(companyId)) {
     notFound();
@@ -41,8 +55,11 @@ export default async function CompanyBookingPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#FEFEFE] px-4 py-8">
-      <BookingShell companyId={companyId} />
+    <div className="min-h-screen bg-white px-4 py-8">
+      <SalonBooking
+        companyId={companyId}
+        preselectedStaffIds={parseStaffIds(staff)}
+      />
     </div>
   );
 }

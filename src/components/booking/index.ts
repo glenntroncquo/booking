@@ -1,3 +1,1 @@
-export { SalonBooking } from "./SalonBooking";
-export * from "./types";
-
+export { SalonBooking, type SalonBookingProps } from "./SalonBooking";

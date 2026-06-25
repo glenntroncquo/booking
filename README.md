@@ -1,12 +1,14 @@
 # Salonify Booking
 
-Public booking app for `booking.salonify.co`.
+Public booking site for `booking.salonify.co`.
+
+Visitors open `/{companyId}` and see the booking widget embedded via iframe.
 
 ## Routes
 
 - `/` — 404 (no landing page)
-- `/{companyId}` — full booking page for a salon (UUID)
-- `/widget?companyId={uuid}` — embeddable iframe widget (postMessage API)
+- `/{companyId}` — booking page (embeds the widget iframe)
+- `/{companyId}?staff={uuid}` — optional preselected staff member(s)
 
 ## Development
 
@@ -18,14 +20,10 @@ npm run dev
 
 Open `http://localhost:3000/{company-uuid}`.
 
-## Embed on salon websites
+## Environment
 
-```html
-<iframe
-  src="https://booking.salonify.co/widget?companyId=YOUR_COMPANY_ID"
-  title="Book appointment"
-  style="width:100%;border:none;min-height:600px"
-></iframe>
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_WIDGET_DOMAIN=https://booking-widget-nine.vercel.app  # widget deployment
 ```
-
-Set `NEXT_PUBLIC_WIDGET_DOMAIN=https://booking.salonify.co` on the salon website.
