@@ -12,6 +12,7 @@ export interface SalonBookingProps {
   supabaseKey?: string;
   widgetDomain?: string;
   preselectedStaffIds?: string[];
+  preselectedStaffSlugs?: string[];
 }
 
 const salonTheme = {
@@ -30,12 +31,14 @@ function buildWidgetUrl({
   supabaseUrl,
   supabaseKey,
   preselectedStaffIds,
+  preselectedStaffSlugs,
 }: {
   widgetDomain: string;
   companyId: string;
   supabaseUrl: string;
   supabaseKey: string;
   preselectedStaffIds: string[];
+  preselectedStaffSlugs: string[];
 }) {
   const params = new URLSearchParams();
   params.set("companyId", companyId);
@@ -44,6 +47,10 @@ function buildWidgetUrl({
 
   if (preselectedStaffIds.length > 0) {
     params.set("staffIds", preselectedStaffIds.join(","));
+  }
+
+  if (preselectedStaffSlugs.length > 0) {
+    params.set("staffSlugs", preselectedStaffSlugs.join(","));
   }
 
   return `${widgetDomain.replace(/\/$/, "")}/widget?${params.toString()}`;
@@ -56,6 +63,7 @@ export function SalonBooking({
   widgetDomain = process.env.NEXT_PUBLIC_WIDGET_DOMAIN ||
     "https://booking-widget-nine.vercel.app",
   preselectedStaffIds = [],
+  preselectedStaffSlugs = [],
 }: SalonBookingProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeHeight, setIframeHeight] = useState(800);
@@ -66,6 +74,7 @@ export function SalonBooking({
     supabaseUrl,
     supabaseKey,
     preselectedStaffIds: preselectedStaffIds.filter(Boolean),
+    preselectedStaffSlugs: preselectedStaffSlugs.filter(Boolean),
   });
 
   const sendTheme = useCallback(() => {

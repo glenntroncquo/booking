@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SalonBooking } from "@/components/booking/SalonBooking";
-import { dedupe, parseList, resolveCompany } from "@/lib/booking";
+import { resolveCompany } from "@/lib/booking";
+import { isValidCompanyId, isValidSlug } from "@/lib/constants";
 
 type PageProps = {
-  params: Promise<{ companyId: string }>;
-  searchParams: Promise<{
-    staff?: string | string[];
-    staffIds?: string | string[];
-    staffSlugs?: string | string[];
-  }>;
+  params: Promise<{ companyId: string; staffSlug: string }>;
 };
 
 export async function generateMetadata({
@@ -28,23 +24,21 @@ export async function generateMetadata({
   };
 }
 
-export default async function CompanyBookingPage({
-  params,
-  searchParams,
-}: PageProps) {
-  const { companyId } = await params;
-  const { staff, staffIds, staffSlugs } = await searchParams;
+export default async function StaffBookingPage({ params }: PageProps) {
+  const { companyId, staffSlug } = await params;
 
   const company = await resolveCompany(companyId);
   if (!company) {
     notFound();
   }
 
-  const preselectedStaffIds = dedupe([
-    ...parseList(staff),
-    ...parseList(staffIds),
-  ]);
-  const preselectedStaffSlugs = dedupe(parseList(staffSlugs));
+  const preselectedStaffIds = isValidCompanyId(staffSlug) ? [staffSlug] : [];
+  const preselectedStaffSlugs =
+    !isValidCompanyId(staffSlug) && isValidSlug(staffSlug) ? [staffSlug] : [];
+
+  if (preselectedStaffIds.length === 0 && preselectedStaffSlugs.length === 0) {
+    notFound();
+  }
 
   return (
     <div className="min-h-screen bg-white px-4 py-8">
