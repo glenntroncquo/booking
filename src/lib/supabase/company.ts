@@ -17,25 +17,28 @@ async function getCompany(
     return null;
   }
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/get-company-by-id`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify(body),
-    next: { revalidate: 60 },
-  });
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/get-company-by-id`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify(body),
+        next: { revalidate: 60 },
+      },
+    );
 
-  if (response.status === 404) {
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as PublicCompany;
+  } catch {
     return null;
   }
-
-  if (!response.ok) {
-    return null;
-  }
-
-  return response.json() as Promise<PublicCompany>;
 }
 
 export async function getCompanyById(
