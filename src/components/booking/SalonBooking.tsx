@@ -1,15 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  SUPABASE_ANON_KEY,
-  SUPABASE_URL,
-} from "@/lib/supabase/config";
 
 export interface SalonBookingProps {
   companyId: string;
-  supabaseUrl?: string;
-  supabaseKey?: string;
   widgetDomain?: string;
   preselectedStaffIds?: string[];
   preselectedStaffSlugs?: string[];
@@ -28,22 +22,16 @@ const salonTheme = {
 function buildWidgetUrl({
   widgetDomain,
   companyId,
-  supabaseUrl,
-  supabaseKey,
   preselectedStaffIds,
   preselectedStaffSlugs,
 }: {
   widgetDomain: string;
   companyId: string;
-  supabaseUrl: string;
-  supabaseKey: string;
   preselectedStaffIds: string[];
   preselectedStaffSlugs: string[];
 }) {
   const params = new URLSearchParams();
   params.set("companyId", companyId);
-  params.set("supabaseUrl", supabaseUrl);
-  params.set("supabaseKey", supabaseKey);
 
   if (preselectedStaffIds.length > 0) {
     params.set("staffIds", preselectedStaffIds.join(","));
@@ -58,8 +46,6 @@ function buildWidgetUrl({
 
 export function SalonBooking({
   companyId,
-  supabaseUrl = SUPABASE_URL,
-  supabaseKey = SUPABASE_ANON_KEY,
   widgetDomain = process.env.NEXT_PUBLIC_WIDGET_DOMAIN ||
     "https://booking-widget-nine.vercel.app",
   preselectedStaffIds = [],
@@ -71,8 +57,6 @@ export function SalonBooking({
   const widgetUrl = buildWidgetUrl({
     widgetDomain,
     companyId,
-    supabaseUrl,
-    supabaseKey,
     preselectedStaffIds: preselectedStaffIds.filter(Boolean),
     preselectedStaffSlugs: preselectedStaffSlugs.filter(Boolean),
   });
@@ -104,14 +88,6 @@ export function SalonBooking({
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [sendTheme]);
-
-  if (!supabaseKey) {
-    return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-8 text-center text-sm text-amber-900">
-        Booking is not configured. Set NEXT_PUBLIC_SUPABASE_ANON_KEY.
-      </div>
-    );
-  }
 
   return (
     <iframe
