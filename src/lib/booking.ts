@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { isValidCompanyId, isValidSlug } from "@/lib/constants";
 import {
   getCompanyById,
@@ -28,4 +29,29 @@ export async function resolveCompany(
     return getCompanyBySlug(identifier);
   }
   return null;
+}
+
+export function buildCompanyMetadata(company: PublicCompany): Metadata {
+  const title = `Boek een afspraak bij ${company.name}`;
+  const description =
+    company.description ?? `Boek een afspraak bij ${company.name}.`;
+  const images = company.image_url ? [{ url: company.image_url }] : undefined;
+
+  return {
+    title,
+    description,
+    robots: { index: true, follow: true },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images,
+    },
+    twitter: {
+      card: images ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: company.image_url ? [company.image_url] : undefined,
+    },
+  };
 }

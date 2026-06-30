@@ -8,6 +8,7 @@ export type PublicCompany = {
   city?: string | null;
   postal_code?: string | null;
   street?: string | null;
+  image_url?: string | null;
 };
 
 async function getCompany(

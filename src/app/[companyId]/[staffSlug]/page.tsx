@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SalonBooking } from "@/components/booking/SalonBooking";
-import { resolveCompany } from "@/lib/booking";
+import { buildCompanyMetadata, resolveCompany } from "@/lib/booking";
 import { isValidCompanyId, isValidSlug } from "@/lib/constants";
 
 type PageProps = {
@@ -14,14 +14,10 @@ export async function generateMetadata({
   const { companyId } = await params;
   const company = await resolveCompany(companyId);
   if (!company) {
-    return { title: "Page not found", robots: { index: false } };
+    return { title: "Pagina niet gevonden", robots: { index: false } };
   }
 
-  return {
-    title: `Book at ${company.name}`,
-    description: company.description ?? `Book an appointment at ${company.name}.`,
-    robots: { index: true, follow: true },
-  };
+  return buildCompanyMetadata(company);
 }
 
 export default async function StaffBookingPage({ params }: PageProps) {
