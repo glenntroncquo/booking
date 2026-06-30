@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -17,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="nl">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

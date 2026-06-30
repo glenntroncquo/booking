@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export interface SalonBookingProps {
   companyId: string;
@@ -52,7 +52,7 @@ export function SalonBooking({
   preselectedStaffSlugs = [],
 }: SalonBookingProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeHeight, setIframeHeight] = useState(800);
+  const [iframeHeight, setIframeHeight] = useState(600);
 
   const widgetUrl = buildWidgetUrl({
     widgetDomain,
@@ -60,6 +60,14 @@ export function SalonBooking({
     preselectedStaffIds: preselectedStaffIds.filter(Boolean),
     preselectedStaffSlugs: preselectedStaffSlugs.filter(Boolean),
   });
+
+  const widgetOrigin = useMemo(() => {
+    try {
+      return new URL(widgetUrl).origin;
+    } catch {
+      return null;
+    }
+  }, [widgetUrl]);
 
   const sendTheme = useCallback(() => {
     iframeRef.current?.contentWindow?.postMessage(
@@ -74,33 +82,44 @@ export function SalonBooking({
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
+      // Only trust messages from the widget origin.
+      if (widgetOrigin && event.origin !== widgetOrigin) return;
+
       if (event.data?.type === "salonify-widget-ready") {
         sendTheme();
       }
-      if (
-        event.data?.type === "salonify-widget-height" &&
-        typeof event.data.height === "number"
-      ) {
+
+      // The widget reports its content height so the iframe can grow to fit
+      // and the PAGE (not the iframe) scrolls when the form is tall.
+      const isResize =
+        event.data?.type === "salonify-widget-resize" ||
+        event.data?.type === "salonify-widget-height";
+
+      if (isResize && typeof event.data.height === "number") {
         setIframeHeight(event.data.height);
       }
     };
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [sendTheme]);
+  }, [sendTheme, widgetOrigin]);
 
   return (
     <iframe
       ref={iframeRef}
+      id="salonify-widget"
       src={widgetUrl}
       title="Book appointment"
       width="100%"
       height={iframeHeight}
+      scrolling="no"
       onLoad={() => setTimeout(sendTheme, 300)}
       style={{
-        border: "none",
-        borderRadius: "8px",
-        minHeight: "600px",
+        display: "block",
+        width: "100%",
+        maxWidth: "480px",
+        border: 0,
+        height: `${iframeHeight}px`,
         transition: "height 0.3s ease-in-out",
       }}
       allow="clipboard-read; clipboard-write"

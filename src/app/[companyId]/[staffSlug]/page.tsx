@@ -41,7 +41,7 @@ export default async function StaffBookingPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8">
+    <div className="booking-shell">
       <SalonBooking
         companyId={company.id}
         preselectedStaffIds={preselectedStaffIds}

@@ -10,6 +10,7 @@
     width: 100%;
     margin: 0;
     padding: 0;
+    min-height: 100dvh;
   }
 
   body {
@@ -17,4 +18,23 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/* Full-viewport booking shell: centers the widget horizontally and lets the
+   PAGE scroll when the form is taller than the viewport (align-items:flex-start).
+   The iframe height is driven by the widget's resize message, never forced to
+   100vh, so there is no inner scrollbar. */
+.booking-shell {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0;
+}
+
+#salonify-widget {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  border: 0;
 }
