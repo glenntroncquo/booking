@@ -8,9 +8,10 @@
   html,
   body {
     width: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
-    min-height: 100dvh;
+    overflow: hidden; /* page itself must not scroll */
   }
 
   body {
@@ -20,15 +21,15 @@
   }
 }
 
-/* Full-viewport booking shell: centers the widget horizontally and lets the
-   PAGE scroll when the form is taller than the viewport (align-items:flex-start).
-   The iframe height is driven by the widget's resize message, never forced to
-   100vh, so there is no inner scrollbar. */
+/* Full-viewport booking shell: no padding/margin around the iframe so the
+   widget fills the entire visible viewport. The iframe is sized with 100dvh so
+   it tracks the real visible area as mobile browser bars show/hide, keeping the
+   sticky footer ("Bekijk afspraken") pinned to the bottom of the screen. Only
+   the widget scrolls internally; the page never scrolls. */
 .booking-shell {
-  min-height: 100dvh;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  margin: 0;
   padding: 0;
 }
 
@@ -36,5 +37,6 @@
   display: block;
   width: 100%;
   max-width: 480px;
+  height: 100dvh;
   border: 0;
 }

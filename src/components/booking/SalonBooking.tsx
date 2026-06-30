@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export interface SalonBookingProps {
   companyId: string;
@@ -52,7 +52,6 @@ export function SalonBooking({
   preselectedStaffSlugs = [],
 }: SalonBookingProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeHeight, setIframeHeight] = useState(600);
 
   const widgetUrl = buildWidgetUrl({
     widgetDomain,
@@ -61,48 +60,23 @@ export function SalonBooking({
     preselectedStaffSlugs: preselectedStaffSlugs.filter(Boolean),
   });
 
-  const widgetOrigin = useMemo(() => {
-    try {
-      return new URL(widgetUrl).origin;
-    } catch {
-      return null;
-    }
-  }, [widgetUrl]);
-
   const sendTheme = useCallback(() => {
     iframeRef.current?.contentWindow?.postMessage(
       { type: "widget-theme", theme: salonTheme },
-      "*",
-    );
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: "widget-request-height" },
       "*",
     );
   }, []);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      // Only trust messages from the widget origin.
-      if (widgetOrigin && event.origin !== widgetOrigin) return;
-
       if (event.data?.type === "salonify-widget-ready") {
         sendTheme();
-      }
-
-      // The widget reports its content height so the iframe can grow to fit
-      // and the PAGE (not the iframe) scrolls when the form is tall.
-      const isResize =
-        event.data?.type === "salonify-widget-resize" ||
-        event.data?.type === "salonify-widget-height";
-
-      if (isResize && typeof event.data.height === "number") {
-        setIframeHeight(event.data.height);
       }
     };
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [sendTheme, widgetOrigin]);
+  }, [sendTheme]);
 
   return (
     <iframe
@@ -110,18 +84,7 @@ export function SalonBooking({
       id="salonify-widget"
       src={widgetUrl}
       title="Book appointment"
-      width="100%"
-      height={iframeHeight}
-      scrolling="no"
       onLoad={() => setTimeout(sendTheme, 300)}
-      style={{
-        display: "block",
-        width: "100%",
-        maxWidth: "480px",
-        border: 0,
-        height: `${iframeHeight}px`,
-        transition: "height 0.3s ease-in-out",
-      }}
       allow="clipboard-read; clipboard-write"
     />
   );
