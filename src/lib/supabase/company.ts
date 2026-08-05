@@ -20,7 +20,7 @@ async function getCompany(
 
   try {
     const response = await fetch(
-      `${SUPABASE_URL}/functions/v1/get-company-by-id`,
+      `${SUPABASE_URL}/functions/v1/company-get`,
       {
         method: "POST",
         headers: {
