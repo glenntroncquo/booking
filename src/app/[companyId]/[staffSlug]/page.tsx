@@ -1,11 +1,21 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SalonBooking } from "@/components/booking/SalonBooking";
-import { buildCompanyMetadata, resolveCompany } from "@/lib/booking";
+import {
+  buildCompanyMetadata,
+  dedupe,
+  parseList,
+  resolveCompany,
+} from "@/lib/booking";
 import { isValidCompanyId, isValidSlug } from "@/lib/constants";
 
 type PageProps = {
   params: Promise<{ companyId: string; staffSlug: string }>;
+  searchParams: Promise<{
+    service?: string | string[];
+    serviceIds?: string | string[];
+    serviceVariantIds?: string | string[];
+  }>;
 };
 
 export async function generateMetadata({
@@ -20,8 +30,12 @@ export async function generateMetadata({
   return buildCompanyMetadata(company);
 }
 
-export default async function StaffBookingPage({ params }: PageProps) {
+export default async function StaffBookingPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { companyId, staffSlug } = await params;
+  const { service, serviceIds, serviceVariantIds } = await searchParams;
 
   const company = await resolveCompany(companyId);
   if (!company) {
@@ -36,12 +50,20 @@ export default async function StaffBookingPage({ params }: PageProps) {
     notFound();
   }
 
+  const preselectedServiceIds = dedupe([
+    ...parseList(service),
+    ...parseList(serviceIds),
+  ]);
+  const preselectedServiceVariantIds = dedupe(parseList(serviceVariantIds));
+
   return (
     <div className="booking-shell">
       <SalonBooking
         companyId={company.id}
         preselectedStaffIds={preselectedStaffIds}
         preselectedStaffSlugs={preselectedStaffSlugs}
+        preselectedServiceIds={preselectedServiceIds}
+        preselectedServiceVariantIds={preselectedServiceVariantIds}
       />
     </div>
   );

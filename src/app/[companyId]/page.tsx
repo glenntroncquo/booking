@@ -14,6 +14,9 @@ type PageProps = {
     staff?: string | string[];
     staffIds?: string | string[];
     staffSlugs?: string | string[];
+    service?: string | string[];
+    serviceIds?: string | string[];
+    serviceVariantIds?: string | string[];
   }>;
 };
 
@@ -34,7 +37,8 @@ export default async function CompanyBookingPage({
   searchParams,
 }: PageProps) {
   const { companyId } = await params;
-  const { staff, staffIds, staffSlugs } = await searchParams;
+  const { staff, staffIds, staffSlugs, service, serviceIds, serviceVariantIds } =
+    await searchParams;
 
   const company = await resolveCompany(companyId);
   if (!company) {
@@ -46,6 +50,11 @@ export default async function CompanyBookingPage({
     ...parseList(staffIds),
   ]);
   const preselectedStaffSlugs = dedupe(parseList(staffSlugs));
+  const preselectedServiceIds = dedupe([
+    ...parseList(service),
+    ...parseList(serviceIds),
+  ]);
+  const preselectedServiceVariantIds = dedupe(parseList(serviceVariantIds));
 
   return (
     <div className="booking-shell">
@@ -53,6 +62,8 @@ export default async function CompanyBookingPage({
         companyId={company.id}
         preselectedStaffIds={preselectedStaffIds}
         preselectedStaffSlugs={preselectedStaffSlugs}
+        preselectedServiceIds={preselectedServiceIds}
+        preselectedServiceVariantIds={preselectedServiceVariantIds}
       />
     </div>
   );
