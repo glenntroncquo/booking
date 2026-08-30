@@ -11,6 +11,7 @@ import { isValidCompanyId, isValidSlug } from "@/lib/constants";
 
 type PageProps = {
   params: Promise<{ companyId: string; staffSlug: string }>;
+  /** service is a short alias for serviceIds. No treatmentId / priceOptionId. */
   searchParams: Promise<{
     service?: string | string[];
     serviceIds?: string | string[];

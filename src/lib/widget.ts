@@ -1,9 +1,11 @@
 /**
  * Embed contract for glenntroncquo/booking-widget.
  *
- * This public site does not query booking-domain tables. Catalog, availability,
- * and appointment_segment writes live in the widget. The iframe URL and
- * postMessage types below are the only coupling.
+ * This public site does not query booking-domain tables and does not call
+ * booking edge functions. Catalog, availability, and appointment writes live
+ * in the widget on the folded v1 slugs (`service-list`, `availability-list`,
+ * `appointment-create` — not `*-v2`, not `treatment-list`). The iframe URL
+ * and postMessage types below are the only coupling.
  */
 
 export const DEFAULT_WIDGET_DOMAIN = "https://booking-widget-nine.vercel.app";
@@ -41,7 +43,7 @@ export type WidgetThemeMessage = {
   theme: WidgetTheme;
 };
 
-/** Query params the widget currently reads, plus service/variant preselection for the segments API. */
+/** Query params the widget reads. serviceIds / serviceVariantIds only — no treatmentId / priceOptionId aliases. */
 export type WidgetEmbedParams = {
   companyId: string;
   staffIds?: string[];
