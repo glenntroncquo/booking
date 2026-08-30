@@ -1,75 +1,51 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import {
+  DEFAULT_WIDGET_THEME,
+  WIDGET_THEME_EVENT,
+  buildWidgetUrl,
+  getWidgetDomain,
+  isWidgetReadyMessage,
+} from "@/lib/widget";
 
 export interface SalonBookingProps {
   companyId: string;
   widgetDomain?: string;
   preselectedStaffIds?: string[];
   preselectedStaffSlugs?: string[];
-}
-
-const salonTheme = {
-  primary: "#FF8FB2",
-  primaryHover: "#FFBDD4",
-  primaryLight: "#FFF0F7",
-  secondary: "#FFBDD4",
-  text: "#4A3F45",
-  background: "white",
-  buttonText: "white",
-};
-
-function buildWidgetUrl({
-  widgetDomain,
-  companyId,
-  preselectedStaffIds,
-  preselectedStaffSlugs,
-}: {
-  widgetDomain: string;
-  companyId: string;
-  preselectedStaffIds: string[];
-  preselectedStaffSlugs: string[];
-}) {
-  const params = new URLSearchParams();
-  params.set("companyId", companyId);
-
-  if (preselectedStaffIds.length > 0) {
-    params.set("staffIds", preselectedStaffIds.join(","));
-  }
-
-  if (preselectedStaffSlugs.length > 0) {
-    params.set("staffSlugs", preselectedStaffSlugs.join(","));
-  }
-
-  return `${widgetDomain.replace(/\/$/, "")}/widget?${params.toString()}`;
+  preselectedServiceIds?: string[];
+  preselectedServiceVariantIds?: string[];
 }
 
 export function SalonBooking({
   companyId,
-  widgetDomain = process.env.NEXT_PUBLIC_WIDGET_DOMAIN ||
-    "https://booking-widget-nine.vercel.app",
+  widgetDomain = getWidgetDomain(),
   preselectedStaffIds = [],
   preselectedStaffSlugs = [],
+  preselectedServiceIds = [],
+  preselectedServiceVariantIds = [],
 }: SalonBookingProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const widgetUrl = buildWidgetUrl({
-    widgetDomain,
+  const widgetUrl = buildWidgetUrl(widgetDomain, {
     companyId,
-    preselectedStaffIds: preselectedStaffIds.filter(Boolean),
-    preselectedStaffSlugs: preselectedStaffSlugs.filter(Boolean),
+    staffIds: preselectedStaffIds,
+    staffSlugs: preselectedStaffSlugs,
+    serviceIds: preselectedServiceIds,
+    serviceVariantIds: preselectedServiceVariantIds,
   });
 
   const sendTheme = useCallback(() => {
     iframeRef.current?.contentWindow?.postMessage(
-      { type: "widget-theme", theme: salonTheme },
+      { type: WIDGET_THEME_EVENT, theme: DEFAULT_WIDGET_THEME },
       "*",
     );
   }, []);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      if (event.data?.type === "salonify-widget-ready") {
+      if (isWidgetReadyMessage(event.data)) {
         sendTheme();
       }
     };
