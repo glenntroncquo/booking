@@ -10,6 +10,7 @@ import {
 
 type PageProps = {
   params: Promise<{ companyId: string }>;
+  /** service is a short alias for serviceIds. No treatmentId / priceOptionId. */
   searchParams: Promise<{
     staff?: string | string[];
     staffIds?: string | string[];
