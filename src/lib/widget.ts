@@ -43,9 +43,11 @@ export type WidgetThemeMessage = {
   theme: WidgetTheme;
 };
 
-/** Query params the widget reads. serviceIds / serviceVariantIds only — no treatmentId / priceOptionId aliases. */
+/** Query params the widget reads. Location is forwarded as locationId and/or locationSlug; the widget resolves it. serviceIds / serviceVariantIds only — no treatmentId / priceOptionId aliases. */
 export type WidgetEmbedParams = {
   companyId: string;
+  locationId?: string;
+  locationSlug?: string;
   staffIds?: string[];
   staffSlugs?: string[];
   serviceIds?: string[];
@@ -70,10 +72,23 @@ function setListParam(
   }
 }
 
+function setParam(
+  params: URLSearchParams,
+  key: string,
+  value: string | undefined,
+) {
+  const trimmed = value?.trim();
+  if (trimmed) {
+    params.set(key, trimmed);
+  }
+}
+
 export function buildWidgetUrl(
   widgetDomain: string,
   {
     companyId,
+    locationId,
+    locationSlug,
     staffIds,
     staffSlugs,
     serviceIds,
@@ -82,6 +97,8 @@ export function buildWidgetUrl(
 ): string {
   const params = new URLSearchParams();
   params.set("companyId", companyId);
+  setParam(params, "locationId", locationId);
+  setParam(params, "locationSlug", locationSlug);
   setListParam(params, "staffIds", staffIds);
   setListParam(params, "staffSlugs", staffSlugs);
   setListParam(params, "serviceIds", serviceIds);

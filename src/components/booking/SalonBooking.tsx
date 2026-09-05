@@ -12,6 +12,8 @@ import {
 export interface SalonBookingProps {
   companyId: string;
   widgetDomain?: string;
+  preselectedLocationId?: string;
+  preselectedLocationSlug?: string;
   preselectedStaffIds?: string[];
   preselectedStaffSlugs?: string[];
   preselectedServiceIds?: string[];
@@ -21,6 +23,8 @@ export interface SalonBookingProps {
 export function SalonBooking({
   companyId,
   widgetDomain = getWidgetDomain(),
+  preselectedLocationId,
+  preselectedLocationSlug,
   preselectedStaffIds = [],
   preselectedStaffSlugs = [],
   preselectedServiceIds = [],
@@ -30,6 +34,8 @@ export function SalonBooking({
 
   const widgetUrl = buildWidgetUrl(widgetDomain, {
     companyId,
+    locationId: preselectedLocationId,
+    locationSlug: preselectedLocationSlug,
     staffIds: preselectedStaffIds,
     staffSlugs: preselectedStaffSlugs,
     serviceIds: preselectedServiceIds,
