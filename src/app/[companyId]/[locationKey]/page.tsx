@@ -3,13 +3,15 @@ import { notFound } from "next/navigation";
 import { SalonBooking } from "@/components/booking/SalonBooking";
 import {
   buildCompanyMetadata,
+  classifyRouteKey,
   dedupe,
+  locationEmbedFromKey,
   parseList,
   resolveCompany,
 } from "@/lib/booking";
 
 type PageProps = {
-  params: Promise<{ companyId: string }>;
+  params: Promise<{ companyId: string; locationKey: string }>;
   /** service is a short alias for serviceIds. No treatmentId / priceOptionId. */
   searchParams: Promise<{
     staff?: string | string[];
@@ -33,17 +35,21 @@ export async function generateMetadata({
   return buildCompanyMetadata(company);
 }
 
-/** Company-only embed: no location is forwarded. The widget shows a location picker when needed. */
-export default async function CompanyBookingPage({
+export default async function LocationBookingPage({
   params,
   searchParams,
 }: PageProps) {
-  const { companyId } = await params;
+  const { companyId, locationKey } = await params;
   const { staff, staffIds, staffSlugs, service, serviceIds, serviceVariantIds } =
     await searchParams;
 
   const company = await resolveCompany(companyId);
   if (!company) {
+    notFound();
+  }
+
+  const location = classifyRouteKey(locationKey);
+  if (!location) {
     notFound();
   }
 
@@ -62,6 +68,7 @@ export default async function CompanyBookingPage({
     <div className="booking-shell">
       <SalonBooking
         companyId={company.id}
+        {...locationEmbedFromKey(location)}
         preselectedStaffIds={preselectedStaffIds}
         preselectedStaffSlugs={preselectedStaffSlugs}
         preselectedServiceIds={preselectedServiceIds}

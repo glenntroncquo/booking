@@ -17,13 +17,36 @@ There is no npm embed package to pin — the widget is loaded by URL
 
 ## Routes
 
-- `/` — 404 (no landing page)
-- `/{companyId}` — booking page (embeds the widget iframe)
-- `/{companyId}?staff={uuid}` — optional preselected staff member(s)
-- `/{companyId}/{staffSlug}` — staff-scoped booking page
-- `/{companyId}?serviceIds={uuid}&serviceVariantIds={uuid}` — optional service /
+Path segments accept a company / location / staff **uuid or slug**. The host
+resolves the company via `company-get` and forwards location/staff keys to the
+widget (`locationId` / `locationSlug`, `staffIds` / `staffSlugs`). The widget
+resolves location and staff. No booking-domain RPCs are added here.
+
+- `/` — 404 unless `?companyId=` or `?companySlug=` (redirects to `/{company}`)
+- `/{company}` — company booking page (no location; widget shows a location
+  picker when the company has more than one)
+- `/{company}/{location}` — location-scoped booking page
+- `/{company}/{location}/{staff}` — location + staff preselect
+- `/{company}?staff={uuid}` — optional staff preselect without a location
+- `/{company}?serviceIds={uuid}&serviceVariantIds={uuid}` — optional service /
   variant preselection forwarded to the widget (`serviceIds` /
   `serviceVariantIds` only; no `treatmentId` / `priceOptionId` aliases)
+
+### Test URL examples
+
+```
+/{company-uuid}
+/{acme-salon}
+/{acme-salon}/{ghent}
+/{acme-salon}/{location-uuid}
+/{acme-salon}/{ghent}/{anna}
+/{acme-salon}/{ghent}/{staff-uuid}
+/{company-uuid}/{location-uuid}/{staff-uuid}
+/{acme-salon}/{ghent}?serviceIds={service-uuid}
+```
+
+The former `/{company}/{staff}` staff deep-link is unused in production and is
+now the location route. Staff preselect is `/{company}/{location}/{staff}`.
 
 ## Development
 

@@ -1,10 +1,43 @@
 import type { Metadata } from "next";
-import { isValidCompanyId, isValidSlug } from "@/lib/constants";
+import { isValidCompanyId, isValidSlug, isValidUuid } from "@/lib/constants";
 import {
   getCompanyById,
   getCompanyBySlug,
   type PublicCompany,
 } from "@/lib/supabase/company";
+
+export type RouteKey =
+  | { kind: "id"; value: string }
+  | { kind: "slug"; value: string };
+
+/** Classify a path segment as uuid or slug. Location/staff are resolved by the widget. */
+export function classifyRouteKey(value: string): RouteKey | null {
+  if (isValidUuid(value)) {
+    return { kind: "id", value };
+  }
+  if (isValidSlug(value)) {
+    return { kind: "slug", value };
+  }
+  return null;
+}
+
+export function locationEmbedFromKey(key: RouteKey): {
+  preselectedLocationId?: string;
+  preselectedLocationSlug?: string;
+} {
+  return key.kind === "id"
+    ? { preselectedLocationId: key.value }
+    : { preselectedLocationSlug: key.value };
+}
+
+export function staffEmbedFromKey(key: RouteKey): {
+  preselectedStaffIds?: string[];
+  preselectedStaffSlugs?: string[];
+} {
+  return key.kind === "id"
+    ? { preselectedStaffIds: [key.value] }
+    : { preselectedStaffSlugs: [key.value] };
+}
 
 export function parseList(value?: string | string[]): string[] {
   if (!value) return [];

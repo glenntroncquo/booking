@@ -3,14 +3,20 @@ import { notFound } from "next/navigation";
 import { SalonBooking } from "@/components/booking/SalonBooking";
 import {
   buildCompanyMetadata,
+  classifyRouteKey,
   dedupe,
+  locationEmbedFromKey,
   parseList,
   resolveCompany,
+  staffEmbedFromKey,
 } from "@/lib/booking";
-import { isValidCompanyId, isValidSlug } from "@/lib/constants";
 
 type PageProps = {
-  params: Promise<{ companyId: string; staffSlug: string }>;
+  params: Promise<{
+    companyId: string;
+    locationKey: string;
+    staffKey: string;
+  }>;
   /** service is a short alias for serviceIds. No treatmentId / priceOptionId. */
   searchParams: Promise<{
     service?: string | string[];
@@ -31,11 +37,11 @@ export async function generateMetadata({
   return buildCompanyMetadata(company);
 }
 
-export default async function StaffBookingPage({
+export default async function LocationStaffBookingPage({
   params,
   searchParams,
 }: PageProps) {
-  const { companyId, staffSlug } = await params;
+  const { companyId, locationKey, staffKey } = await params;
   const { service, serviceIds, serviceVariantIds } = await searchParams;
 
   const company = await resolveCompany(companyId);
@@ -43,11 +49,9 @@ export default async function StaffBookingPage({
     notFound();
   }
 
-  const preselectedStaffIds = isValidCompanyId(staffSlug) ? [staffSlug] : [];
-  const preselectedStaffSlugs =
-    !isValidCompanyId(staffSlug) && isValidSlug(staffSlug) ? [staffSlug] : [];
-
-  if (preselectedStaffIds.length === 0 && preselectedStaffSlugs.length === 0) {
+  const location = classifyRouteKey(locationKey);
+  const staff = classifyRouteKey(staffKey);
+  if (!location || !staff) {
     notFound();
   }
 
@@ -61,8 +65,8 @@ export default async function StaffBookingPage({
     <div className="booking-shell">
       <SalonBooking
         companyId={company.id}
-        preselectedStaffIds={preselectedStaffIds}
-        preselectedStaffSlugs={preselectedStaffSlugs}
+        {...locationEmbedFromKey(location)}
+        {...staffEmbedFromKey(staff)}
         preselectedServiceIds={preselectedServiceIds}
         preselectedServiceVariantIds={preselectedServiceVariantIds}
       />
