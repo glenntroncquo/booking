@@ -5,12 +5,17 @@ import {
   getCompanyBySlug,
   type PublicCompany,
 } from "@/lib/supabase/company";
+import {
+  getPublicLocation,
+  type LocationLookup,
+  type PublicLocation,
+} from "@/lib/supabase/location";
 
 export type RouteKey =
   | { kind: "id"; value: string }
   | { kind: "slug"; value: string };
 
-/** Classify a path segment as uuid or slug. Location/staff are resolved by the widget. */
+/** Classify a path segment as uuid or slug. Staff is still resolved by the widget. */
 export function classifyRouteKey(value: string): RouteKey | null {
   if (isValidUuid(value)) {
     return { kind: "id", value };
@@ -64,20 +69,92 @@ export async function resolveCompany(
   return null;
 }
 
-export function buildCompanyMetadata(company: PublicCompany): Metadata {
-  const title = `Boek een afspraak bij ${company.name}`;
+export type LocationPin =
+  | { status: "invalid" }
+  | { status: "found"; location: PublicLocation; key: RouteKey }
+  | { status: "missing" }
+  | { status: "unavailable" };
+
+/** Verify a location path pin via anon `location` SELECT (no new RPC). */
+export async function resolveLocationPin(
+  companyId: string,
+  locationKey: string,
+): Promise<LocationPin> {
+  const key = classifyRouteKey(locationKey);
+  if (!key) {
+    return { status: "invalid" };
+  }
+
+  const lookup: LocationLookup = await getPublicLocation({
+    companyId,
+    locationId: key.kind === "id" ? key.value : undefined,
+    locationSlug: key.kind === "slug" ? key.value : undefined,
+  });
+
+  if (lookup.status === "found") {
+    return { status: "found", location: lookup.location, key };
+  }
+
+  return lookup;
+}
+
+export function companyPathSegment(company: PublicCompany): string {
+  return company.slug || company.id;
+}
+
+export function locationPathSegment(location: PublicLocation): string {
+  return location.slug || location.id;
+}
+
+export function buildBookingPath(
+  company: PublicCompany,
+  location?: PublicLocation,
+  staffKey?: string,
+): string {
+  const parts = [companyPathSegment(company)];
+  if (location) {
+    parts.push(locationPathSegment(location));
+  }
+  if (staffKey) {
+    parts.push(staffKey);
+  }
+  return `/${parts.join("/")}`;
+}
+
+export function unverifiedLocationMetadata(company: PublicCompany): Metadata {
+  return {
+    title: `Locatie niet gevonden | ${company.name}`,
+    robots: { index: false, follow: false },
+  };
+}
+
+export function buildCompanyMetadata(
+  company: PublicCompany,
+  options?: { location?: PublicLocation; staffKey?: string },
+): Metadata {
+  const locationName = options?.location?.name?.trim();
+  const title = locationName
+    ? `Boek een afspraak bij ${company.name} — ${locationName}`
+    : `Boek een afspraak bij ${company.name}`;
   const description =
     company.description ?? `Boek een afspraak bij ${company.name}.`;
   const images = company.image_url ? [{ url: company.image_url }] : undefined;
+  const canonical = buildBookingPath(
+    company,
+    options?.location,
+    options?.staffKey,
+  );
 
   return {
     title,
     description,
     robots: { index: true, follow: true },
+    alternates: { canonical },
     openGraph: {
       title,
       description,
       type: "website",
+      url: canonical,
       images,
     },
     twitter: {

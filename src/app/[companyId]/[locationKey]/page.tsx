@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { LocationUnavailable } from "@/components/booking/LocationUnavailable";
 import { SalonBooking } from "@/components/booking/SalonBooking";
 import {
   buildCompanyMetadata,
-  classifyRouteKey,
   dedupe,
-  locationEmbedFromKey,
   parseList,
   resolveCompany,
+  resolveLocationPin,
+  unverifiedLocationMetadata,
 } from "@/lib/booking";
 
 type PageProps = {
@@ -26,13 +27,18 @@ type PageProps = {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const { companyId } = await params;
+  const { companyId, locationKey } = await params;
   const company = await resolveCompany(companyId);
   if (!company) {
     return { title: "Pagina niet gevonden", robots: { index: false } };
   }
 
-  return buildCompanyMetadata(company);
+  const pin = await resolveLocationPin(company.id, locationKey);
+  if (pin.status === "found") {
+    return buildCompanyMetadata(company, { location: pin.location });
+  }
+
+  return unverifiedLocationMetadata(company);
 }
 
 export default async function LocationBookingPage({
@@ -48,9 +54,12 @@ export default async function LocationBookingPage({
     notFound();
   }
 
-  const location = classifyRouteKey(locationKey);
-  if (!location) {
+  const pin = await resolveLocationPin(company.id, locationKey);
+  if (pin.status === "invalid" || pin.status === "missing") {
     notFound();
+  }
+  if (pin.status === "unavailable") {
+    return <LocationUnavailable companyName={company.name} />;
   }
 
   const preselectedStaffIds = dedupe([
@@ -68,7 +77,8 @@ export default async function LocationBookingPage({
     <div className="booking-shell">
       <SalonBooking
         companyId={company.id}
-        {...locationEmbedFromKey(location)}
+        preselectedLocationId={pin.location.id}
+        preselectedLocationSlug={pin.location.slug ?? undefined}
         preselectedStaffIds={preselectedStaffIds}
         preselectedStaffSlugs={preselectedStaffSlugs}
         preselectedServiceIds={preselectedServiceIds}
