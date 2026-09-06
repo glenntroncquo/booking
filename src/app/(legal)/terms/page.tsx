@@ -34,8 +34,9 @@ export default function TermsPage() {
         <h2 className="text-base font-semibold text-neutral-900">Acceptable use</h2>
         <p className="mt-2">
           Use the service only for lawful salon operations. Do not misuse the
-          platform, attempt unauthorized access, or use it to infringe others'
-          rights. You must have a lawful basis to store client data you enter.
+          platform, attempt unauthorized access, or use it to infringe the
+          rights of others. You must have a lawful basis to store client data
+          you enter.
         </p>
       </section>
 
