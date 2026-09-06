@@ -26,9 +26,12 @@ resolves the company via `company-get`, verifies the location pin via anon
 `location` SELECT, and forwards location/staff keys to the widget (`locationId`
 / `locationSlug`, `staffIds` / `staffSlugs`). The widget still resolves staff.
 No booking-domain RPCs are added here. Titles include the location name when
-known; canonical URLs prefer slugs. There is no sitemap.
+known; canonical URLs prefer slugs. There is no sitemap. First-segment slugs
+`privacy` and `terms` are reserved public legal pages (not company slugs).
 
 - `/` — 404 unless `?companyId=` or `?companySlug=` (redirects to `/{company}`)
+- `/privacy` — public Privacy Policy (draft; store / App URL)
+- `/terms` — public Terms of Service (draft; store / App URL)
 - `/{company}` — company booking page (no location; widget shows a location
   picker when the company has more than one)
 - `/{company}/{location}` — location-scoped booking page
