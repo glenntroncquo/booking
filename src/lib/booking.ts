@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { isValidCompanyId, isValidSlug, isValidUuid } from "@/lib/constants";
+import { isReservedPublicSlug } from "@/lib/legal";
 import {
   getCompanyById,
   getCompanyBySlug,
@@ -60,6 +61,9 @@ export function dedupe(values: string[]): string[] {
 export async function resolveCompany(
   identifier: string,
 ): Promise<PublicCompany | null> {
+  if (isReservedPublicSlug(identifier)) {
+    return null;
+  }
   if (isValidCompanyId(identifier)) {
     return getCompanyById(identifier);
   }
