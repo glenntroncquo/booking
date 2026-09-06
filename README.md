@@ -3,14 +3,18 @@
 Public booking site for `booking.salonify.co`.
 
 Visitors open `/{companyId}` and see the booking widget embedded via iframe.
-This repo does **not** query booking-domain tables and does **not** call
-`service-list`, `availability-list`, `appointment-create`,
-`appointment-cancel`, or `appointment-list`. Those folded v1 slugs live in
-[`booking-widget`](https://github.com/glenntroncquo/booking-widget). This site
-never used the additive `*-v2` slugs and does not call `treatment-list`.
+This repo does **not** call `service-list`, `availability-list`,
+`appointment-create`, `appointment-cancel`, or `appointment-list`. Those folded
+v1 slugs live in [`booking-widget`](https://github.com/glenntroncquo/booking-widget).
+This site never used the additive `*-v2` slugs and does not call
+`treatment-list`. No new public RPCs are added here.
 
-The only Supabase call here is `company-get`, for public company metadata (SEO /
-404).
+Supabase usage on the host:
+
+- `company-get` — public company metadata (SEO / 404)
+- anon `GET /rest/v1/location` — existing RLS `location select (anon public booking)`
+  to verify a location pin and read its name for title/canonical. Unknown
+  locations 404 (or `noindex` + empty state if that read is unavailable).
 
 There is no npm embed package to pin — the widget is loaded by URL
 (`NEXT_PUBLIC_WIDGET_DOMAIN`).
@@ -18,9 +22,11 @@ There is no npm embed package to pin — the widget is loaded by URL
 ## Routes
 
 Path segments accept a company / location / staff **uuid or slug**. The host
-resolves the company via `company-get` and forwards location/staff keys to the
-widget (`locationId` / `locationSlug`, `staffIds` / `staffSlugs`). The widget
-resolves location and staff. No booking-domain RPCs are added here.
+resolves the company via `company-get`, verifies the location pin via anon
+`location` SELECT, and forwards location/staff keys to the widget (`locationId`
+/ `locationSlug`, `staffIds` / `staffSlugs`). The widget still resolves staff.
+No booking-domain RPCs are added here. Titles include the location name when
+known; canonical URLs prefer slugs. There is no sitemap.
 
 - `/` — 404 unless `?companyId=` or `?companySlug=` (redirects to `/{company}`)
 - `/{company}` — company booking page (no location; widget shows a location
@@ -45,8 +51,9 @@ resolves location and staff. No booking-domain RPCs are added here.
 /{acme-salon}/{ghent}?serviceIds={service-uuid}
 ```
 
-The former `/{company}/{staff}` staff deep-link is unused in production and is
-now the location route. Staff preselect is `/{company}/{location}/{staff}`.
+There is **no shim** for the old `/{company}/{staff}` staff deep-link. That path
+is unused in production and is now the **location** route. Staff preselect is
+`/{company}/{location}/{staff}` only.
 
 ## Development
 

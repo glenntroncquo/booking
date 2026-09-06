@@ -1,11 +1,12 @@
 /**
  * Embed contract for glenntroncquo/booking-widget.
  *
- * This public site does not query booking-domain tables and does not call
- * booking edge functions. Catalog, availability, and appointment writes live
- * in the widget on the folded v1 slugs (`service-list`, `availability-list`,
- * `appointment-create` — not `*-v2`, not `treatment-list`). The iframe URL
- * and postMessage types below are the only coupling.
+ * This public site does not call booking edge functions. Catalog, availability,
+ * and appointment writes live in the widget on the folded v1 slugs
+ * (`service-list`, `availability-list`, `appointment-create` — not `*-v2`,
+ * not `treatment-list`). The host may read `public.location` via existing anon
+ * RLS for SEO / 404. The iframe URL and postMessage types below are the only
+ * widget coupling.
  */
 
 export const DEFAULT_WIDGET_DOMAIN = "https://booking-widget-nine.vercel.app";
