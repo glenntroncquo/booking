@@ -11,7 +11,9 @@ This site never used the additive `*-v2` slugs and does not call
 
 Supabase usage on the host:
 
-- `company-get` — public company metadata (SEO / 404)
+- `company-get` — public company metadata (SEO / 404). Optional
+  `deposit_enabled` / `deposit_amount` fields are forwarded to the widget when
+  present; they are not required.
 - anon `GET /rest/v1/location` — existing RLS `location select (anon public booking)`
   to verify a location pin and read its name for title/canonical. Unknown
   locations 404 (or `noindex` + empty state if that read is unavailable).
@@ -57,6 +59,24 @@ known; canonical URLs prefer slugs. There is no sitemap. First-segment slugs
 There is **no shim** for the old `/{company}/{staff}` staff deep-link. That path
 is unused in production and is now the **location** route. Staff preselect is
 `/{company}/{location}/{staff}` only.
+
+## Deposits (Stripe Checkout)
+
+When the company has deposits enabled and the amount is > 0, public
+`appointment-create` (called by the **widget**, not this host) returns
+`checkout_url`. The widget must postMessage that URL to the parent; this site
+redirects the top window to Stripe Checkout (`checkout.stripe.com` only).
+
+Stripe success / cancel should return to the same booking path:
+
+```
+/{company}?deposit=success
+/{company}/{location}?deposit=cancel
+```
+
+`checkout=success|cancel` and Stripe `session_id` are also treated as a return.
+The host shows a short notice and keeps the widget loaded. Confirm-step deposit
+copy lives in the widget. No new public RPCs.
 
 ## Development
 
