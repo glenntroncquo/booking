@@ -19,12 +19,11 @@
  * Paid Checkout also appends `session_id={CHECKOUT_SESSION_ID}`.
  * The host injects `successUrl`/`cancelUrl` and snake_case
  * `success_url`/`cancel_url` on the iframe query and `widget-config`.
- * After a success return the host covers the picker with pending, then
- * success+confetti when the widget postMessages a confirmed booking
- * (`booking-created` / `deposit-success` + booking_id) or a paid session
- * short-poll completes. Bare `?deposit=success` is not confirmation.
- * The host never invokes `appointment-create`. Deposit-off create still
- * returns no `checkout_url` and confirms in-widget.
+ * Stripe only returns to success_url after payment, so the host shows
+ * Tot snel + confetti immediately — no hold/appointment poll.
+ * Cancel keeps the soft-fail banner. The host never invokes
+ * `appointment-create`. Deposit-off create still returns no
+ * `checkout_url` and confirms in-widget.
  */
 
 export const DEFAULT_WIDGET_DOMAIN = "https://booking-widget-nine.vercel.app";
@@ -104,9 +103,6 @@ export type WidgetEmbedParams = {
   cancelUrl: string;
   depositAmount?: number;
   depositEnabled?: boolean;
-  /** Forwarded on Stripe return so the widget can resume confirmation. */
-  deposit?: "success" | "cancel";
-  sessionId?: string;
 };
 
 export function getWidgetDomain(): string {
@@ -152,8 +148,6 @@ export function buildWidgetUrl(
     cancelUrl,
     depositAmount,
     depositEnabled,
-    deposit,
-    sessionId,
   }: WidgetEmbedParams,
 ): string {
   const params = new URLSearchParams();
@@ -174,11 +168,6 @@ export function buildWidgetUrl(
   }
   if (depositAmount != null && Number.isFinite(depositAmount) && depositAmount > 0) {
     params.set("depositAmount", String(depositAmount));
-  }
-  // Success return only — cancel stays on the picker so the customer can retry.
-  if (deposit === "success") {
-    params.set("deposit", "success");
-    setParam(params, "session_id", sessionId);
   }
   return `${widgetDomain.replace(/\/$/, "")}/widget?${params.toString()}`;
 }
