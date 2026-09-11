@@ -74,6 +74,10 @@ Stripe success / cancel should return to the same booking path:
 /{company}/{location}?deposit=cancel
 ```
 
+The host always injects those absolute `https://` URLs into the widget iframe
+(`successUrl` / `cancelUrl` and `success_url` / `cancel_url`) and via
+`widget-config`, so `appointment-create` can send them when deposits apply.
+
 `checkout=success|cancel` and Stripe `session_id` are also treated as a return.
 The host shows a short notice and keeps the widget loaded. Confirm-step deposit
 copy lives in the widget. No new public RPCs.

@@ -21,8 +21,9 @@ export interface SalonBookingProps {
   preselectedStaffSlugs?: string[];
   preselectedServiceIds?: string[];
   preselectedServiceVariantIds?: string[];
-  successUrl?: string;
-  cancelUrl?: string;
+  /** Host booking-path return URLs. Always passed so deposit create cannot omit them. */
+  successUrl: string;
+  cancelUrl: string;
   depositEnabled?: boolean;
   depositAmount?: number;
 }
@@ -66,16 +67,17 @@ export function SalonBooking({
       "*",
     );
 
-    const config: WidgetConfigMessage["config"] = {};
-    if (successUrl) config.successUrl = successUrl;
-    if (cancelUrl) config.cancelUrl = cancelUrl;
+    const config: WidgetConfigMessage["config"] = {
+      successUrl,
+      cancelUrl,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    };
     if (depositEnabled) config.depositEnabled = true;
     if (depositAmount != null && depositAmount > 0) {
       config.depositAmount = depositAmount;
     }
-    if (Object.keys(config).length > 0) {
-      frame.postMessage({ type: WIDGET_CONFIG_EVENT, config }, "*");
-    }
+    frame.postMessage({ type: WIDGET_CONFIG_EVENT, config }, "*");
   }, [successUrl, cancelUrl, depositEnabled, depositAmount]);
 
   useEffect(() => {
