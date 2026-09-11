@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BookingShell } from "@/components/booking/BookingShell";
 import { LocationUnavailable } from "@/components/booking/LocationUnavailable";
-import { SalonBooking } from "@/components/booking/SalonBooking";
 import {
   buildCompanyMetadata,
   dedupe,
@@ -10,6 +10,7 @@ import {
   resolveLocationPin,
   unverifiedLocationMetadata,
 } from "@/lib/booking";
+import { parseDepositReturn } from "@/lib/deposit";
 
 type PageProps = {
   params: Promise<{ companyId: string; locationKey: string }>;
@@ -21,6 +22,9 @@ type PageProps = {
     service?: string | string[];
     serviceIds?: string | string[];
     serviceVariantIds?: string | string[];
+    deposit?: string | string[];
+    checkout?: string | string[];
+    session_id?: string | string[];
   }>;
 };
 
@@ -46,8 +50,17 @@ export default async function LocationBookingPage({
   searchParams,
 }: PageProps) {
   const { companyId, locationKey } = await params;
-  const { staff, staffIds, staffSlugs, service, serviceIds, serviceVariantIds } =
-    await searchParams;
+  const {
+    staff,
+    staffIds,
+    staffSlugs,
+    service,
+    serviceIds,
+    serviceVariantIds,
+    deposit,
+    checkout,
+    session_id,
+  } = await searchParams;
 
   const company = await resolveCompany(companyId);
   if (!company) {
@@ -74,16 +87,16 @@ export default async function LocationBookingPage({
   const preselectedServiceVariantIds = dedupe(parseList(serviceVariantIds));
 
   return (
-    <div className="booking-shell">
-      <SalonBooking
-        companyId={company.id}
-        preselectedLocationId={pin.location.id}
-        preselectedLocationSlug={pin.location.slug ?? undefined}
-        preselectedStaffIds={preselectedStaffIds}
-        preselectedStaffSlugs={preselectedStaffSlugs}
-        preselectedServiceIds={preselectedServiceIds}
-        preselectedServiceVariantIds={preselectedServiceVariantIds}
-      />
-    </div>
+    <BookingShell
+      company={company}
+      location={pin.location}
+      depositReturn={parseDepositReturn({ deposit, checkout, session_id })}
+      preselectedLocationId={pin.location.id}
+      preselectedLocationSlug={pin.location.slug ?? undefined}
+      preselectedStaffIds={preselectedStaffIds}
+      preselectedStaffSlugs={preselectedStaffSlugs}
+      preselectedServiceIds={preselectedServiceIds}
+      preselectedServiceVariantIds={preselectedServiceVariantIds}
+    />
   );
 }
