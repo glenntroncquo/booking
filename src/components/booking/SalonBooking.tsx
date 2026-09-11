@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { checkoutUrlFromWidgetMessage } from "@/lib/deposit";
+import {
+  checkoutUrlFromWidgetMessage,
+  type DepositReturn,
+} from "@/lib/deposit";
 import {
   DEFAULT_WIDGET_THEME,
   WIDGET_CONFIG_EVENT,
@@ -26,6 +29,8 @@ export interface SalonBookingProps {
   cancelUrl: string;
   depositEnabled?: boolean;
   depositAmount?: number;
+  /** Forwarded on Stripe success so the widget owns Tot snel + confetti. */
+  depositReturn?: DepositReturn | null;
 }
 
 export function SalonBooking({
@@ -41,6 +46,7 @@ export function SalonBooking({
   cancelUrl,
   depositEnabled,
   depositAmount,
+  depositReturn = null,
 }: SalonBookingProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -56,6 +62,7 @@ export function SalonBooking({
     cancelUrl,
     depositEnabled,
     depositAmount,
+    deposit: depositReturn === "success" ? "success" : undefined,
   });
 
   const sendHostConfig = useCallback(() => {

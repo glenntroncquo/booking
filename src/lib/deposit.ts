@@ -40,9 +40,9 @@ function normalizeStatus(value: string | undefined): DepositReturn | null {
  * unless the other flags say cancel.
  *
  * Stripe only redirects to success_url after a paid Checkout session, so
- * `?deposit=success` is treated as paid immediately. This host does not
- * poll hold/appointment status. `booking_id` / `appointment_id` / `hold_id`
- * on the URL are ignored.
+ * `?deposit=success` is treated as paid immediately and forwarded to the
+ * widget. This host does not poll hold/appointment status.
+ * `booking_id` / `appointment_id` / `hold_id` on the URL are ignored.
  */
 export function parseDepositReturn(search: {
   deposit?: string | string[];
@@ -74,8 +74,8 @@ export function depositReturnUrls(
   const base = `${safeOrigin}${path === "/" ? "" : path}`;
   return {
     // Hold path: return to the booking page, not an appointment id.
-    // Stripe substitutes session_id; the host celebrates on deposit=success
-    // without waiting for webhook/hold promotion.
+    // Stripe substitutes session_id. The host forwards deposit=success to
+    // the widget (no host Tot snel overlay, no webhook/hold poll).
     successUrl: `${base}?deposit=success&session_id=${STRIPE_SESSION_PLACEHOLDER}`,
     cancelUrl: `${base}?deposit=cancel`,
   };

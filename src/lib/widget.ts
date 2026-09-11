@@ -19,8 +19,9 @@
  * Paid Checkout also appends `session_id={CHECKOUT_SESSION_ID}`.
  * The host injects `successUrl`/`cancelUrl` and snake_case
  * `success_url`/`cancel_url` on the iframe query and `widget-config`.
- * Stripe only returns to success_url after payment, so the host shows
- * Tot snel + confetti immediately — no hold/appointment poll.
+ * Stripe only returns to success_url after payment. The host forwards
+ * `deposit=success` on the iframe so the widget shows the same Tot snel
+ * + confetti as a normal book — no host interstitial, no hold poll.
  * Cancel keeps the soft-fail banner. The host never invokes
  * `appointment-create`. Deposit-off create still returns no
  * `checkout_url` and confirms in-widget.
@@ -103,6 +104,8 @@ export type WidgetEmbedParams = {
   cancelUrl: string;
   depositAmount?: number;
   depositEnabled?: boolean;
+  /** Stripe success return — widget #12 shows Tot snel + confetti immediately. */
+  deposit?: "success";
 };
 
 export function getWidgetDomain(): string {
@@ -148,6 +151,7 @@ export function buildWidgetUrl(
     cancelUrl,
     depositAmount,
     depositEnabled,
+    deposit,
   }: WidgetEmbedParams,
 ): string {
   const params = new URLSearchParams();
@@ -168,6 +172,10 @@ export function buildWidgetUrl(
   }
   if (depositAmount != null && Number.isFinite(depositAmount) && depositAmount > 0) {
     params.set("depositAmount", String(depositAmount));
+  }
+  // Success return only — cancel stays on the picker so the customer can retry.
+  if (deposit === "success") {
+    params.set("deposit", "success");
   }
   return `${widgetDomain.replace(/\/$/, "")}/widget?${params.toString()}`;
 }
