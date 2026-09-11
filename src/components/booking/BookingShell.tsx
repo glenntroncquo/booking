@@ -1,6 +1,7 @@
 import { DepositReturnNotice } from "@/components/booking/DepositReturnNotice";
 import { SalonBooking, type SalonBookingProps } from "@/components/booking/SalonBooking";
 import { buildBookingPath } from "@/lib/booking";
+import { getBookingOrigin } from "@/lib/booking-origin";
 import {
   depositReturnUrls,
   readCompanyDeposit,
@@ -23,7 +24,7 @@ type BookingShellProps = Omit<
   depositReturn?: DepositReturn | null;
 };
 
-export function BookingShell({
+export async function BookingShell({
   company,
   location,
   staffKey,
@@ -31,7 +32,10 @@ export function BookingShell({
   ...embed
 }: BookingShellProps) {
   const bookingPath = buildBookingPath(company, location, staffKey);
-  const { successUrl, cancelUrl } = depositReturnUrls(bookingPath);
+  const { successUrl, cancelUrl } = depositReturnUrls(
+    bookingPath,
+    await getBookingOrigin(),
+  );
   const deposit = readCompanyDeposit(company);
 
   return (

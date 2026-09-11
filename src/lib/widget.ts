@@ -12,7 +12,9 @@
  * response includes `checkout_url`, it postMessages `salonify-checkout` (or
  * `salonify-booking-event` / `checkout`) so this host can redirect the **top**
  * window to Stripe Checkout. Success/cancel return to this origin with
- * `?deposit=success|cancel`. The host never invokes `appointment-create`.
+ * `?deposit=success|cancel`. The host injects `successUrl`/`cancelUrl` and
+ * snake_case `success_url`/`cancel_url` on the iframe query and `widget-config`
+ * so the widget can send them on create. The host never invokes `appointment-create`.
  */
 
 export const DEFAULT_WIDGET_DOMAIN = "https://booking-widget-nine.vercel.app";
@@ -58,6 +60,8 @@ export type WidgetConfigMessage = {
   config: {
     successUrl?: string;
     cancelUrl?: string;
+    success_url?: string;
+    cancel_url?: string;
     depositAmount?: number;
     depositEnabled?: boolean;
   };
@@ -138,6 +142,9 @@ export function buildWidgetUrl(
   setListParam(params, "serviceVariantIds", serviceVariantIds);
   setParam(params, "successUrl", successUrl);
   setParam(params, "cancelUrl", cancelUrl);
+  // Architect / BE: appointment-create reads snake_case. Widget accepts both.
+  setParam(params, "success_url", successUrl);
+  setParam(params, "cancel_url", cancelUrl);
   if (depositEnabled) {
     params.set("depositEnabled", "true");
   }

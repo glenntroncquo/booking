@@ -67,8 +67,14 @@ export function SalonBooking({
     );
 
     const config: WidgetConfigMessage["config"] = {};
-    if (successUrl) config.successUrl = successUrl;
-    if (cancelUrl) config.cancelUrl = cancelUrl;
+    if (successUrl) {
+      config.successUrl = successUrl;
+      config.success_url = successUrl;
+    }
+    if (cancelUrl) {
+      config.cancelUrl = cancelUrl;
+      config.cancel_url = cancelUrl;
+    }
     if (depositEnabled) config.depositEnabled = true;
     if (depositAmount != null && depositAmount > 0) {
       config.depositAmount = depositAmount;

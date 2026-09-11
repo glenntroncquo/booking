@@ -1,3 +1,4 @@
+import { normalizePublicOrigin } from "@/lib/public-origin";
 import { APP_URL } from "@/lib/supabase/config";
 import { WIDGET_BOOKING_EVENT, WIDGET_CHECKOUT_EVENT } from "@/lib/widget";
 
@@ -44,13 +45,16 @@ export function parseDepositReturn(search: {
   return null;
 }
 
-export function depositReturnUrls(bookingPath: string): {
+export function depositReturnUrls(
+  bookingPath: string,
+  origin: string = APP_URL,
+): {
   successUrl: string;
   cancelUrl: string;
 } {
-  const origin = APP_URL.replace(/\/+$/, "");
+  const safeOrigin = normalizePublicOrigin(origin);
   const path = bookingPath.startsWith("/") ? bookingPath : `/${bookingPath}`;
-  const base = `${origin}${path === "/" ? "" : path}`;
+  const base = `${safeOrigin}${path === "/" ? "" : path}`;
   return {
     successUrl: `${base}?deposit=success`,
     cancelUrl: `${base}?deposit=cancel`,
