@@ -5,12 +5,12 @@ import type { DepositReturn } from "@/lib/deposit";
 
 const COPY: Record<DepositReturn, { title: string; body: string }> = {
   success: {
-    title: "Betaling ontvangen",
-    body: "Je afspraak wordt bevestigd zodra de betaling is verwerkt.",
+    title: "Betaling wordt verwerkt",
+    body: "Je afspraak is nog niet bevestigd. Zodra het voorschot is verwerkt, ontvang je een bevestiging.",
   },
   cancel: {
     title: "Betaling geannuleerd",
-    body: "Je kunt de boeking opnieuw afronden in het formulier hieronder.",
+    body: "Er is geen afspraak vastgelegd. Je kunt de boeking hieronder opnieuw afronden.",
   },
 };
 

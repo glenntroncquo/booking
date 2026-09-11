@@ -8,13 +8,18 @@
  * RLS for SEO / 404. The iframe URL and postMessage types below are the only
  * widget coupling.
  *
- * Deposit Checkout (Phase 3): the widget calls `appointment-create`. When the
- * response includes `checkout_url`, it postMessages `salonify-checkout` (or
- * `salonify-booking-event` / `checkout`) so this host can redirect the **top**
- * window to Stripe Checkout. Success/cancel return to this origin with
- * `?deposit=success|cancel`. The host injects `successUrl`/`cancelUrl` and
- * snake_case `success_url`/`cancel_url` on the iframe query and `widget-config`
- * so the widget can send them on create. The host never invokes `appointment-create`.
+ * Deposit Checkout (Phase B `booking_hold`): the widget calls
+ * `appointment-create`. When a deposit is due the response is a hold, not a
+ * booking: `hold_id` + `checkout_url` + `hold_expires_at`/`expires_at` +
+ * `status: hold_active` — **no `booking_id` until paid**. The widget
+ * postMessages `salonify-checkout` (or `salonify-booking-event` / `checkout`)
+ * with `checkout_url`. This host redirects the **top** window to Stripe
+ * Checkout on that URL alone (hold fields optional; `booking_id` never
+ * required). Success/cancel return here with `?deposit=success|cancel`.
+ * The host injects `successUrl`/`cancelUrl` and snake_case
+ * `success_url`/`cancel_url` on the iframe query and `widget-config`.
+ * The host never invokes `appointment-create`. Deposit-off create still
+ * returns no `checkout_url` and confirms in-widget.
  */
 
 export const DEFAULT_WIDGET_DOMAIN = "https://booking-widget-nine.vercel.app";
@@ -70,9 +75,17 @@ export type WidgetConfigMessage = {
 export type WidgetCheckoutMessage = {
   type: typeof WIDGET_CHECKOUT_EVENT;
   checkout_url: string;
+  checkoutUrl?: string;
+  /** Phase B hold — present when create reserved a slot, not a booking. */
+  hold_id?: string;
+  hold_expires_at?: string;
+  expires_at?: string;
+  status?: string;
+  /** Absent until webhook creates the appointment after pay. */
+  booking_id?: string | null;
 };
 
-/** Query params the widget reads. Location is forwarded as locationId and/or locationSlug; the widget resolves it. serviceIds / serviceVariantIds only — no treatmentId / priceOptionId aliases. Deposit return URLs are host booking paths (`?deposit=success|cancel`). */
+/** Query params the widget reads. Location is forwarded as locationId and/or locationSlug; the widget resolves it. serviceIds / serviceVariantIds only — no treatmentId / priceOptionId aliases. Deposit return URLs are host booking paths (`?deposit=success|cancel`) — no booking_id. */
 export type WidgetEmbedParams = {
   companyId: string;
   locationId?: string;

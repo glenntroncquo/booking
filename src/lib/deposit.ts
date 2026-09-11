@@ -26,6 +26,9 @@ function normalizeStatus(value: string | undefined): DepositReturn | null {
  * Read deposit return state from the booking URL.
  * `deposit` wins, then `checkout`, then Stripe `session_id` as success
  * unless the other flags say cancel.
+ *
+ * `booking_id` / `appointment_id` / `hold_id` are ignored — a hold is not a
+ * confirmed appointment, and this host does not look up either id.
  */
 export function parseDepositReturn(search: {
   deposit?: string | string[];
@@ -56,6 +59,7 @@ export function depositReturnUrls(
   const path = bookingPath.startsWith("/") ? bookingPath : `/${bookingPath}`;
   const base = `${safeOrigin}${path === "/" ? "" : path}`;
   return {
+    // Hold path: return to the booking page, not an appointment id.
     successUrl: `${base}?deposit=success`,
     cancelUrl: `${base}?deposit=cancel`,
   };
@@ -86,8 +90,27 @@ function readCheckoutUrl(value: unknown): string | null {
 }
 
 /**
- * Widget → host: checkout_url after appointment-create.
+ * Read Stripe Checkout URL from a create/hold payload.
+ * `checkout_url` is enough — `booking_id` is not required (Phase B hold).
+ */
+function checkoutUrlFromPayload(payload: Record<string, unknown>): string | null {
+  const hold = asRecord(payload.hold);
+  const checkout = asRecord(payload.checkout);
+  return (
+    readCheckoutUrl(payload.checkout_url) ??
+    readCheckoutUrl(payload.checkoutUrl) ??
+    readCheckoutUrl(hold?.checkout_url) ??
+    readCheckoutUrl(hold?.checkoutUrl) ??
+    readCheckoutUrl(checkout?.url) ??
+    readCheckoutUrl(checkout?.checkout_url)
+  );
+}
+
+/**
+ * Widget → host: checkout_url after deposit create (Phase B hold or legacy).
  * Accepts `salonify-checkout` or `salonify-booking-event` with event `checkout`.
+ * Redirects on `checkout_url` even when `booking_id` is missing/null and only
+ * `hold_id` / `hold_expires_at` / `status: hold_active` are present.
  */
 export function checkoutUrlFromWidgetMessage(data: unknown): string | null {
   const message = asRecord(data);
@@ -95,23 +118,12 @@ export function checkoutUrlFromWidgetMessage(data: unknown): string | null {
 
   const type = message.type;
   if (type === WIDGET_CHECKOUT_EVENT) {
-    return (
-      readCheckoutUrl(message.checkout_url) ??
-      readCheckoutUrl(message.checkoutUrl)
-    );
+    return checkoutUrlFromPayload(message);
   }
 
   if (type === WIDGET_BOOKING_EVENT && message.event === "checkout") {
     const nested = asRecord(message.data);
-    if (!nested) {
-      return (
-        readCheckoutUrl(message.checkout_url) ??
-        readCheckoutUrl(message.checkoutUrl)
-      );
-    }
-    return (
-      readCheckoutUrl(nested.checkout_url) ?? readCheckoutUrl(nested.checkoutUrl)
-    );
+    return checkoutUrlFromPayload(nested ?? message);
   }
 
   return null;
