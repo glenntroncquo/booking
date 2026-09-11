@@ -36,7 +36,7 @@ export function BookingShell({
 
   return (
     <div className="booking-shell">
-      <DepositReturnNotice status={depositReturn} />
+      {depositReturn ? <DepositReturnNotice status={depositReturn} /> : null}
       <SalonBooking
         {...embed}
         companyId={company.id}
