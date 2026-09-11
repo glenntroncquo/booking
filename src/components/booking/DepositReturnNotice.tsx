@@ -1,22 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  DEPOSIT_PAID_POLL_MS,
-  isConfirmedBookingMessage,
-  type DepositReturn,
-  type DepositReturnPhase,
-} from "@/lib/deposit";
+import { useEffect, useRef, useState } from "react";
+import type { DepositReturn } from "@/lib/deposit";
 
-const COPY: Record<
-  DepositReturnPhase,
-  { title: string; body: string }
-> = {
-  pending: {
-    title: "Betaling wordt verwerkt",
-    body: "Even geduld — we bevestigen je afspraak. Dit scherm blijft staan tot het voorschot is verwerkt.",
-  },
-  confirmed: {
+const COPY: Record<DepositReturn, { title: string; body: string }> = {
+  success: {
     title: "Tot snel!",
     body: "Je afspraak is bevestigd. We sturen een bevestiging naar je e-mailadres.",
   },
@@ -42,57 +30,26 @@ function fireConfetti(root: HTMLElement) {
 
 export function DepositReturnNotice({
   status,
-  sessionId = null,
 }: {
   status: DepositReturn | null;
-  sessionId?: string | null;
 }) {
   const [dismissed, setDismissed] = useState(false);
-  const [phase, setPhase] = useState<DepositReturnPhase | null>(
-    status === "cancel" ? "cancel" : status === "success" ? "pending" : null,
-  );
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (status !== "success" || phase === "confirmed") return;
-
-    const confirm = () => {
-      setPhase((current) => (current === "confirmed" ? current : "confirmed"));
-    };
-
-    const onMessage = (event: MessageEvent) => {
-      if (isConfirmedBookingMessage(event.data)) {
-        confirm();
-      }
-    };
-    window.addEventListener("message", onMessage);
-
-    // Paid Checkout return: short poll, then celebrate. Typed
-    // ?deposit=success without session_id stays pending (not unpaid success).
-    let timer: number | undefined;
-    if (sessionId) {
-      timer = window.setTimeout(confirm, DEPOSIT_PAID_POLL_MS);
-    }
-
-    return () => {
-      window.removeEventListener("message", onMessage);
-      if (timer) window.clearTimeout(timer);
-    };
-  }, [status, sessionId, phase]);
-
-  useEffect(() => {
-    if (phase !== "confirmed") return;
-    const root = document.querySelector<HTMLElement>(".deposit-return-overlay");
+    if (status !== "success") return;
+    const root = overlayRef.current;
     if (!root) return;
     fireConfetti(root);
-  }, [phase]);
+  }, [status]);
 
-  if (!status || !phase || dismissed) {
+  if (!status || dismissed) {
     return null;
   }
 
-  const copy = COPY[phase];
+  const copy = COPY[status];
 
-  if (phase === "cancel") {
+  if (status === "cancel") {
     return (
       <div
         className="deposit-return-notice border-amber-200 bg-amber-50 text-amber-950"
@@ -116,30 +73,24 @@ export function DepositReturnNotice({
 
   return (
     <div
-      className={`deposit-return-overlay ${phase}`}
+      ref={overlayRef}
+      className="deposit-return-overlay success"
       role="status"
       aria-live="polite"
-      aria-busy={phase === "pending"}
     >
       <div className="deposit-return-card">
-        {phase === "confirmed" ? (
-          <div className="deposit-return-check" aria-hidden>
-            ✓
-          </div>
-        ) : (
-          <div className="deposit-return-spinner" aria-hidden />
-        )}
+        <div className="deposit-return-check" aria-hidden>
+          ✓
+        </div>
         <h2>{copy.title}</h2>
         <p>{copy.body}</p>
-        {phase === "confirmed" ? (
-          <button
-            type="button"
-            className="deposit-return-again"
-            onClick={() => setDismissed(true)}
-          >
-            Boek een nieuwe afspraak
-          </button>
-        ) : null}
+        <button
+          type="button"
+          className="deposit-return-again"
+          onClick={() => setDismissed(true)}
+        >
+          Boek een nieuwe afspraak
+        </button>
       </div>
     </div>
   );
