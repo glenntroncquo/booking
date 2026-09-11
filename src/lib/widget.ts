@@ -81,8 +81,9 @@ export type WidgetEmbedParams = {
   staffSlugs?: string[];
   serviceIds?: string[];
   serviceVariantIds?: string[];
-  successUrl?: string;
-  cancelUrl?: string;
+  /** Always set — deposit create requires them; no-deposit create ignores them. */
+  successUrl: string;
+  cancelUrl: string;
   depositAmount?: number;
   depositEnabled?: boolean;
 };

@@ -32,6 +32,8 @@ export async function BookingShell({
   ...embed
 }: BookingShellProps) {
   const bookingPath = buildBookingPath(company, location, staffKey);
+  // Always inject return URLs (not gated on deposit_enabled). company-get may
+  // omit that flag; BE only requires the URLs when a deposit is due.
   const { successUrl, cancelUrl } = depositReturnUrls(
     bookingPath,
     await getBookingOrigin(),
