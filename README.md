@@ -63,9 +63,22 @@ is unused in production and is now the **location** route. Staff preselect is
 ## Deposits (Stripe Checkout)
 
 When the company has deposits enabled and the amount is > 0, public
-`appointment-create` (called by the **widget**, not this host) returns
-`checkout_url`. The widget must postMessage that URL to the parent; this site
+`appointment-create` (called by the **widget**, not this host) returns a
+**hold**, not a booking:
+
+- `hold_id`
+- `checkout_url`
+- `hold_expires_at` / `expires_at`
+- `status`: `hold_active`
+
+There is **no `booking_id`** until pay (webhook creates the appointment).
+The widget must postMessage `checkout_url` to the parent; this site
 redirects the top window to Stripe Checkout (`checkout.stripe.com` only).
+`booking_id` is never required for that redirect. Extra hold fields on the
+postMessage are ignored.
+
+Deposit-off create still returns **no** `checkout_url`. The widget confirms
+in-place; this host does not redirect.
 
 Stripe success / cancel should return to the same booking path:
 
@@ -76,11 +89,13 @@ Stripe success / cancel should return to the same booking path:
 
 The host always injects those absolute `https://` URLs into the widget iframe
 (`successUrl` / `cancelUrl` and `success_url` / `cancel_url`) and via
-`widget-config`, so `appointment-create` can send them when deposits apply.
+`widget-config`, so create can send them when deposits apply.
 
 `checkout=success|cancel` and Stripe `session_id` are also treated as a return.
-The host shows a short notice and keeps the widget loaded. Confirm-step deposit
-copy lives in the widget. No new public RPCs.
+`booking_id` / `appointment_id` / `hold_id` on the return URL are **not**
+treated as a confirmed appointment. The host shows a short pending-payment
+notice and keeps the widget loaded. Confirm-step deposit copy lives in the
+widget. No new public RPCs.
 
 ## Development
 

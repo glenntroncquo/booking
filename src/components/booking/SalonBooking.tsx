@@ -87,6 +87,7 @@ export function SalonBooking({
         return;
       }
 
+      // Hold path: checkout_url is enough. Do not wait for booking_id.
       const checkoutUrl = checkoutUrlFromWidgetMessage(event.data);
       if (checkoutUrl) {
         window.location.assign(checkoutUrl);
