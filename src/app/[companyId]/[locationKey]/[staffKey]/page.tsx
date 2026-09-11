@@ -12,7 +12,7 @@ import {
   staffEmbedFromKey,
   unverifiedLocationMetadata,
 } from "@/lib/booking";
-import { parseDepositReturn } from "@/lib/deposit";
+import { parseDepositReturn, parseDepositSessionId } from "@/lib/deposit";
 
 type PageProps = {
   params: Promise<{
@@ -85,6 +85,7 @@ export default async function LocationStaffBookingPage({
       location={pin.location}
       staffKey={staffKey}
       depositReturn={parseDepositReturn({ deposit, checkout, session_id })}
+      depositSessionId={parseDepositSessionId({ session_id })}
       preselectedLocationId={pin.location.id}
       preselectedLocationSlug={pin.location.slug ?? undefined}
       {...staffEmbedFromKey(staff)}

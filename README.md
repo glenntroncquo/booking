@@ -93,8 +93,19 @@ The host always injects those absolute `https://` URLs into the widget iframe
 
 `checkout=success|cancel` and Stripe `session_id` are also treated as a return.
 `booking_id` / `appointment_id` / `hold_id` on the return URL are **not**
-treated as a confirmed appointment. The host shows a short pending-payment
-notice and keeps the widget loaded. Confirm-step deposit copy lives in the
+treated as a confirmed appointment.
+
+Success return (`?deposit=success`) covers the widget with a **pending**
+screen (not the location picker). The host celebrates **success + confetti**
+only when:
+
+- the widget postMessages a confirmed booking (`booking-created`, or
+  `deposit-success` with `booking_id` / completed hold), or
+- Stripe appended a paid `session_id=cs_…` and a short poll finishes.
+
+A typed `?deposit=success` without a Checkout `session_id` stays pending —
+it is not treated as paid. Cancel still shows the banner and leaves the
+widget up so the customer can retry. Confirm-step deposit copy lives in the
 widget. No new public RPCs.
 
 ## Development
