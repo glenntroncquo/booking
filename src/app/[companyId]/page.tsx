@@ -7,7 +7,7 @@ import {
   parseList,
   resolveCompany,
 } from "@/lib/booking";
-import { parseDepositReturn } from "@/lib/deposit";
+import { parseDepositReturn, parseDepositSessionId } from "@/lib/deposit";
 
 type PageProps = {
   params: Promise<{ companyId: string }>;
@@ -75,6 +75,7 @@ export default async function CompanyBookingPage({
     <BookingShell
       company={company}
       depositReturn={parseDepositReturn({ deposit, checkout, session_id })}
+      depositSessionId={parseDepositSessionId({ session_id })}
       preselectedStaffIds={preselectedStaffIds}
       preselectedStaffSlugs={preselectedStaffSlugs}
       preselectedServiceIds={preselectedServiceIds}

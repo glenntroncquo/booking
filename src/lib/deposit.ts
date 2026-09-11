@@ -5,13 +5,43 @@ import { WIDGET_BOOKING_EVENT, WIDGET_CHECKOUT_EVENT } from "@/lib/widget";
 /** Stripe Checkout success / cancel landing on this host. */
 export type DepositReturn = "success" | "cancel";
 
+/** Host overlay after Stripe return — never treat the URL flag as confirmed. */
+export type DepositReturnPhase = "cancel" | "pending" | "confirmed";
+
 const CANCEL_VALUES = new Set(["cancel", "cancelled", "canceled"]);
 const SUCCESS_VALUES = new Set(["success", "paid", "complete"]);
+const CONFIRMED_HOLD_STATUSES = new Set([
+  "completed",
+  "complete",
+  "scheduled",
+  "hold_completed",
+  "promoted",
+]);
+const CONFIRMED_WIDGET_EVENTS = new Set([
+  "booking-created",
+  "hold-completed",
+  "appointment-created",
+]);
 
-function firstQueryValue(value?: string | string[]): string | undefined {
+/** Stripe substitutes this on the Checkout success URL. */
+export const STRIPE_SESSION_PLACEHOLDER = "{CHECKOUT_SESSION_ID}";
+
+/** Short wait for the paid webhook to promote the hold. */
+export const DEPOSIT_PAID_POLL_MS = 5000;
+
+export function firstQueryValue(value?: string | string[]): string | undefined {
   const raw = Array.isArray(value) ? value[0] : value;
   const trimmed = raw?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+/** Stripe Checkout session id from the return URL — not a confirmed appointment. */
+export function parseDepositSessionId(search: {
+  session_id?: string | string[];
+}): string | null {
+  const raw = firstQueryValue(search.session_id);
+  if (!raw || raw === STRIPE_SESSION_PLACEHOLDER) return null;
+  return /^cs_(test|live)_[A-Za-z0-9]+$/.test(raw) ? raw : null;
 }
 
 function normalizeStatus(value: string | undefined): DepositReturn | null {
@@ -60,7 +90,9 @@ export function depositReturnUrls(
   const base = `${safeOrigin}${path === "/" ? "" : path}`;
   return {
     // Hold path: return to the booking page, not an appointment id.
-    successUrl: `${base}?deposit=success`,
+    // session_id lets the host distinguish a paid Checkout return from a
+    // typed ?deposit=success (do not celebrate unpaid).
+    successUrl: `${base}?deposit=success&session_id=${STRIPE_SESSION_PLACEHOLDER}`,
     cancelUrl: `${base}?deposit=cancel`,
   };
 }
@@ -127,6 +159,61 @@ export function checkoutUrlFromWidgetMessage(data: unknown): string | null {
   }
 
   return null;
+}
+
+function readId(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim() !== "") {
+      return value.trim();
+    }
+  }
+  return null;
+}
+
+function payloadHasConfirmedAppointment(
+  payload: Record<string, unknown> | null,
+): boolean {
+  if (!payload) return false;
+  const hold = asRecord(payload.hold);
+  const bookingId = readId(
+    payload.booking_id,
+    payload.bookingId,
+    payload.appointment_id,
+    payload.appointmentId,
+    hold?.booking_id,
+    hold?.appointment_id,
+  );
+  if (bookingId) return true;
+
+  const status = readId(payload.status, hold?.status)?.toLowerCase();
+  return Boolean(status && CONFIRMED_HOLD_STATUSES.has(status));
+}
+
+/**
+ * Widget → host: appointment exists / hold promoted.
+ * Bare `deposit-success` (URL return, no booking_id) is not confirmation.
+ */
+export function isConfirmedBookingMessage(data: unknown): boolean {
+  const message = asRecord(data);
+  if (!message) return false;
+
+  if (message.type === WIDGET_BOOKING_EVENT) {
+    const event = typeof message.event === "string" ? message.event : "";
+    const nested = asRecord(message.data);
+    if (event === "deposit-success") {
+      return payloadHasConfirmedAppointment(nested ?? message);
+    }
+    if (CONFIRMED_WIDGET_EVENTS.has(event)) {
+      return true;
+    }
+    return false;
+  }
+
+  if (message.type === WIDGET_CHECKOUT_EVENT) {
+    return payloadHasConfirmedAppointment(message);
+  }
+
+  return payloadHasConfirmedAppointment(message);
 }
 
 export type CompanyDeposit = {

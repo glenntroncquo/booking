@@ -17,11 +17,14 @@ type BookingShellProps = Omit<
   | "cancelUrl"
   | "depositEnabled"
   | "depositAmount"
+  | "depositReturn"
+  | "sessionId"
 > & {
   company: PublicCompany;
   location?: PublicLocation;
   staffKey?: string;
   depositReturn?: DepositReturn | null;
+  depositSessionId?: string | null;
 };
 
 export async function BookingShell({
@@ -29,6 +32,7 @@ export async function BookingShell({
   location,
   staffKey,
   depositReturn = null,
+  depositSessionId = null,
   ...embed
 }: BookingShellProps) {
   const bookingPath = buildBookingPath(company, location, staffKey);
@@ -42,7 +46,12 @@ export async function BookingShell({
 
   return (
     <div className="booking-shell">
-      {depositReturn ? <DepositReturnNotice status={depositReturn} /> : null}
+      {depositReturn ? (
+        <DepositReturnNotice
+          status={depositReturn}
+          sessionId={depositSessionId}
+        />
+      ) : null}
       <SalonBooking
         {...embed}
         companyId={company.id}
@@ -50,6 +59,8 @@ export async function BookingShell({
         cancelUrl={cancelUrl}
         depositEnabled={deposit.enabled || undefined}
         depositAmount={deposit.enabled ? (deposit.amount ?? undefined) : undefined}
+        depositReturn={depositReturn}
+        sessionId={depositSessionId}
       />
     </div>
   );

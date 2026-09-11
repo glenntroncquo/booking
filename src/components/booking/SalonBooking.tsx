@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { checkoutUrlFromWidgetMessage } from "@/lib/deposit";
+import {
+  checkoutUrlFromWidgetMessage,
+  type DepositReturn,
+} from "@/lib/deposit";
 import {
   DEFAULT_WIDGET_THEME,
   WIDGET_CONFIG_EVENT,
@@ -26,6 +29,8 @@ export interface SalonBookingProps {
   cancelUrl: string;
   depositEnabled?: boolean;
   depositAmount?: number;
+  depositReturn?: DepositReturn | null;
+  sessionId?: string | null;
 }
 
 export function SalonBooking({
@@ -41,6 +46,8 @@ export function SalonBooking({
   cancelUrl,
   depositEnabled,
   depositAmount,
+  depositReturn = null,
+  sessionId = null,
 }: SalonBookingProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -56,6 +63,8 @@ export function SalonBooking({
     cancelUrl,
     depositEnabled,
     depositAmount,
+    deposit: depositReturn === "success" ? "success" : undefined,
+    sessionId: sessionId ?? undefined,
   });
 
   const sendHostConfig = useCallback(() => {
