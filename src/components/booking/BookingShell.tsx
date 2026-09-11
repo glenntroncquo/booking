@@ -17,6 +17,7 @@ type BookingShellProps = Omit<
   | "cancelUrl"
   | "depositEnabled"
   | "depositAmount"
+  | "depositReturn"
 > & {
   company: PublicCompany;
   location?: PublicLocation;
@@ -42,7 +43,9 @@ export async function BookingShell({
 
   return (
     <div className="booking-shell">
-      {depositReturn ? <DepositReturnNotice status={depositReturn} /> : null}
+      {depositReturn === "cancel" ? (
+        <DepositReturnNotice status={depositReturn} />
+      ) : null}
       <SalonBooking
         {...embed}
         companyId={company.id}
@@ -50,6 +53,7 @@ export async function BookingShell({
         cancelUrl={cancelUrl}
         depositEnabled={deposit.enabled || undefined}
         depositAmount={deposit.enabled ? (deposit.amount ?? undefined) : undefined}
+        depositReturn={depositReturn}
       />
     </div>
   );

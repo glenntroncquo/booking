@@ -93,12 +93,13 @@ The host always injects those absolute `https://` URLs into the widget iframe
 
 `checkout=success|cancel` and Stripe `session_id` are also treated as a return.
 
-Stripe only redirects to `success_url` after a paid Checkout session, so
-`?deposit=success` immediately shows the same **Tot snel!** confirmation +
-confetti as a non-deposit booking. Appointment create stays webhook-owned;
-the host does **not** poll hold/appointment status. Cancel still shows the
-banner and leaves the widget up so the customer can retry. Confirm-step
-deposit copy lives in the widget. No new public RPCs.
+Stripe only redirects to `success_url` after a paid Checkout session. The
+host forwards `deposit=success` into the widget iframe so that screen is
+the same **Tot snel!** + confetti as a normal / widget book — not a
+separate host interstitial. Appointment create stays webhook-owned; the
+host does **not** poll hold/appointment status. Cancel still shows the
+soft-fail banner and leaves the widget up so the customer can retry.
+Confirm-step deposit copy lives in the widget. No new public RPCs.
 
 ## Development
 
